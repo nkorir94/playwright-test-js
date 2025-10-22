@@ -6,7 +6,7 @@ on:
     branches: [ main, master ]
 
 permissions:
-  contents: write   # Needed for Pages deployment
+  contents: write   # Required for deploying to Pages
 
 jobs:
   test:
@@ -31,14 +31,20 @@ jobs:
       - name: Run Playwright tests and generate HTML report
         run: npx playwright test --reporter=html
 
-      - name: Add timestamp to HTML report
+      - name: Add clickable timestamp to report
         if: always()
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-          echo "<div style='position:fixed;bottom:10px;right:10px;font-size:14px;color:#555;'>Last test run: $TIMESTAMP</div>" >> playwright-report/index.html
-          echo "Timestamp added: $TIMESTAMP"
+          echo "<div style='position:fixed;bottom:10px;right:10px;font-size:14px;color:#555;'>
+            <a href='$RUN_URL' target='_blank' style='color:#0078d7;text-decoration:none;'>
+              Last test run: $TIMESTAMP
+            </a>
+          </div>" >> playwright-report/index.html
+          echo "Added timestamp link: $RUN_URL"
 
-      - name: Upload HTML report as artifact (optional backup)
+      - name: Upload HTML report as artifact (backup)
         uses: actions/upload-artifact@v4
         if: always()
         with:
